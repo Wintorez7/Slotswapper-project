@@ -20,7 +20,7 @@ import {
   format,
 } from "date-fns";
 
-const API_BASE_URL = "http://localhost:3000/api/events";
+const API_BASE_URL = "https://slotswapper-project-4hp6.onrender.com/api/events";
 
 export default function MyCalendar() {
   const [isModalOpen, setIsModalOpen] = useState(false);

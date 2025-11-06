@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import { format } from "date-fns";
 
-const API_BASE_URL = "http://localhost:3000/api/events";
+const API_BASE_URL = "https://slotswapper-project-4hp6.onrender.com/api/events";
 
 export function EventModal({
   open,

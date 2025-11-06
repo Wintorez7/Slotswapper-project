@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
 
-const API_BASE_URL = "http://localhost:3000/api/events";
+const API_BASE_URL = "https://slotswapper-project-4hp6.onrender.com/api/events";
 
 export function AddSlotModal({ open, onOpenChange, onSlotAdded }: any) {
   const [title, setTitle] = useState("");
