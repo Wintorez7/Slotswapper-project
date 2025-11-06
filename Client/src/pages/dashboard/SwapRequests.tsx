@@ -17,7 +17,7 @@ import { toast } from "react-toastify";
 const API_BASE_URL =
   import.meta.env.MODE === "development"
     ? "http://localhost:3000/api/swaps"
-    : "https://slotswapper-project-4hp6.onrender.com/api/swaps";
+    : "https://slotswapper-project-4hp6.onrender.com/api/events/swappable";
 
 
 export default function SwapRequests() {

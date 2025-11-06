@@ -7,7 +7,11 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { format } from "date-fns";
 
-const API_BASE_URL = "https://slotswapper-project-4hp6.onrender.com/api/events";
+// ✅ Use environment-aware API base URL
+const API_BASE_URL =
+  import.meta.env.MODE === "development"
+    ? "http://localhost:3000/api/events"
+    : "https://slotswapper-project-4hp6.onrender.com/api/events";
 
 export default function Marketplace() {
   const [slots, setSlots] = useState<any[]>([]);
@@ -20,7 +24,8 @@ export default function Marketplace() {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const res = await axios.get(`${API_BASE_URL}/events/swappable`, {
+      // ✅ Correct endpoint
+      const res = await axios.get(`${API_BASE_URL}/swappable`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -37,43 +42,41 @@ export default function Marketplace() {
     fetchSwappableSlots();
   }, []);
 
+  // ✅ Send Swap Request
   const handleRequestSwap = async (targetEventId: string, targetUserEmail: string) => {
-  try {
-    setRequestingId(targetEventId);
-    const token = localStorage.getItem("token");
+    try {
+      setRequestingId(targetEventId);
+      const token = localStorage.getItem("token");
 
-    // Ask user for their event ID (for now, manual entry)
-    const offeredEventId = prompt("Enter your event ID to offer in swap (for testing):");
-    if (!offeredEventId) {
-      toast.info("Swap canceled. You need to provide your event ID.");
-      return;
-    }
-
-    // ✅ Send all three fields
-    const res = await axios.post(
-      `${API_BASE_URL}/swaps/request`,
-      {
-        targetEmail: targetUserEmail,
-        targetEventId,
-        offeredEventId,
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
+      const offeredEventId = prompt("Enter your event ID to offer in swap (for testing):");
+      if (!offeredEventId) {
+        toast.info("Swap canceled. You need to provide your event ID.");
+        return;
       }
-    );
 
-    if (res.data.success) {
-      toast.success(`Swap request sent successfully to ${targetUserEmail}`);
+      // ✅ Use the correct swaps endpoint
+      const res = await axios.post(
+        `https://slotswapper-project-4hp6.onrender.com/api/swaps/request`,
+        {
+          targetEmail: targetUserEmail,
+          targetEventId,
+          offeredEventId,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (res.data.success) {
+        toast.success(`Swap request sent successfully to ${targetUserEmail}`);
+      }
+    } catch (error: any) {
+      console.error("Swap request failed:", error);
+      toast.error(error.response?.data?.message || "Failed to send swap request");
+    } finally {
+      setRequestingId(null);
     }
-  } catch (error: any) {
-    console.error("Swap request failed:", error);
-    toast.error(error.response?.data?.message || "Failed to send swap request");
-  } finally {
-    setRequestingId(null);
-  }
-};
-
-
+  };
 
   return (
     <div className="space-y-8 animate-fade-in">

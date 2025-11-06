@@ -15,7 +15,7 @@ export default function Topbar() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    toast.success( "Loout successful!", {
+    toast.success( "Logout successful!", {
             position: "top-right",
             autoClose: 2000,
             theme: "colored",
