@@ -7,7 +7,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { format } from "date-fns";
 
-const API_BASE_URL = "http://localhost:3000/api";
+const API_BASE_URL = "https://slotswapper-project-4hp6.onrender.com/api/events";
 
 export default function Marketplace() {
   const [slots, setSlots] = useState<any[]>([]);

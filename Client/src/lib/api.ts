@@ -1,4 +1,4 @@
-export const API_BASE_URL = "http://localhost:3000/api";
+export const API_BASE_URL = "https://slotswapper-project-4hp6.onrender.com/api";
 
 export async function apiRequest(endpoint: string, method = "GET", body?: any) {
   const res = await fetch(`${API_BASE_URL}${endpoint}`, {

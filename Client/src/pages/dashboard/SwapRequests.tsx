@@ -14,7 +14,11 @@ import {
 import axios from "axios";
 import { toast } from "react-toastify";
 
-const API_BASE_URL = "http://localhost:3000/api/swaps";
+const API_BASE_URL =
+  import.meta.env.MODE === "development"
+    ? "http://localhost:3000/api/swaps"
+    : "https://slotswapper-project-4hp6.onrender.com/api/swaps";
+
 
 export default function SwapRequests() {
   const [incoming, setIncoming] = useState<any[]>([]);
