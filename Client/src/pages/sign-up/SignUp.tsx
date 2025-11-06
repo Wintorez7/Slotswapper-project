@@ -4,7 +4,7 @@ import AuthForm from "@/pages/auth/AuthForm";
 import { toast } from "react-toastify";
 
 // Your backend base URL (adjust if needed)
-const API_BASE_URL = "http://localhost:3000/api/auth";
+const API_BASE_URL = "https://slotswapper-project-4hp6.onrender.com/api/events";
 
 function SignUp() {
   const navigate = useNavigate();
