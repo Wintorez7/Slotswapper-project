@@ -6,12 +6,20 @@ const PORT = process.env.PORT || 3000
 
 // middleware
 app.use(express.json());
+const allowedOrigins = [
+  "http://localhost:8080",
+  "https://slotswapper-project.vercel.app",
+];
 app.use(
   cors({
-    origin: "http://localhost:8080", // frontend origin
-    credentials: true, // allow cookies / auth headers
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
   })
 );
 
