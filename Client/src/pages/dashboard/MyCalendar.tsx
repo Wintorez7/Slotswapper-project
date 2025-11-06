@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AddSlotModal } from "@/components/AddSlotModal";
+import { EventModal } from "@/components/EventModal";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { EventModal } from "@/components/EventModal";
 import {
   startOfMonth,
   endOfMonth,
@@ -19,6 +19,7 @@ import {
   isSameDay,
   format,
 } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 
 const API_BASE_URL = "https://slotswapper-project-4hp6.onrender.com/api/events";
 
@@ -31,17 +32,19 @@ export default function MyCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedEvents, setSelectedEvents] = useState<any[]>([]);
 
-  // handle date click
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  // Handle day click
   const handleDayClick = (day: Date) => {
     const dayEvents = events.filter((event) =>
-      isSameDay(new Date(event.startTime), day)
+      isSameDay(toZonedTime(event.startTime, timeZone), day)
     );
     setSelectedDate(day);
     setSelectedEvents(dayEvents);
     setIsEventModalOpen(true);
   };
 
-  // ✅ Fetch events
+  // Fetch all events
   const fetchEvents = async () => {
     try {
       setLoading(true);
@@ -62,12 +65,11 @@ export default function MyCalendar() {
     fetchEvents();
   }, []);
 
-  // ✅ Add new event handler
   const handleAddEvent = (newEvent: any) => {
     setEvents((prev) => [...prev, newEvent]);
   };
 
-  // ✅ Calendar date calculations
+  // Calendar grid setup
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const startDate = startOfWeek(monthStart, { weekStartsOn: 0 });
@@ -82,29 +84,21 @@ export default function MyCalendar() {
 
   return (
     <div className="p-6 bg-card rounded-2xl shadow-lg">
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold flex items-center gap-2 text-white">
           <Calendar className="w-6 h-6 text-primary" /> My Calendar
         </h2>
 
         <div className="flex items-center gap-3">
-          <Button
-            onClick={prevMonth}
-            className="p-2 rounded-full hover:bg-white/10"
-          >
+          <Button onClick={prevMonth} className="p-2 rounded-full hover:bg-white/10">
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <h3 className="text-lg font-semibold text-white">
             {format(currentMonth, "MMMM yyyy")}
           </h3>
-          <Button
-            onClick={nextMonth}
-            className="p-2 rounded-full hover:bg-white/10"
-          >
+          <Button onClick={nextMonth} className="p-2 rounded-full hover:bg-white/10">
             <ChevronRight className="w-5 h-5" />
           </Button>
-
           <Button
             className="gradient-primary text-white px-5 py-2 ml-4 rounded-xl"
             onClick={() => setIsModalOpen(true)}
@@ -118,12 +112,11 @@ export default function MyCalendar() {
           onOpenChange={setIsModalOpen}
           onSlotAdded={(newEvent: any) => {
             handleAddEvent(newEvent);
-            fetchEvents(); // refresh list
+            fetchEvents();
           }}
         />
       </div>
 
-      {/* Calendar Grid */}
       <div className="grid grid-cols-7 text-center text-white mb-2">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
           <div key={d} className="font-medium text-sm text-muted-foreground">
@@ -137,64 +130,58 @@ export default function MyCalendar() {
       ) : (
         <div className="grid grid-cols-7 gap-2">
           {days.map((day, idx) => {
-            const dayEvents = events.filter(
-            (event) =>
-              isSameDay(new Date(event.startTime), day) &&
-              isSameMonth(new Date(event.startTime), currentMonth)
-          );
+            const dayEvents = events.filter((event) =>
+              isSameDay(toZonedTime(event.startTime, timeZone), day)
+            );
 
             return (
               <div
-              key={idx}
-              onClick={() => handleDayClick(day)}
-              className={`cursor-pointer p-3 rounded-lg border border-white/10 min-h-[100px] transition-all ${
-                !isSameMonth(day, currentMonth)
-                  ? "opacity-40"
-                  : "hover:bg-white/10"
-              } ${isSameDay(day, today) }`}
-            >
+                key={idx}
+                onClick={() => handleDayClick(day)}
+                className={`cursor-pointer p-3 rounded-lg border border-white/10 min-h-[100px] transition-all ${
+                  !isSameMonth(day, currentMonth)
+                    ? "opacity-40"
+                    : "hover:bg-white/10"
+                } ${isSameDay(day, today) && ""}`}
+              >
                 <p className="text-sm font-semibold text-white">
                   {format(day, "d")}
                 </p>
 
                 <div className="mt-1 space-y-1">
-                  {dayEvents.map((event, eIdx) => (
-                    <div
-                      key={eIdx}
-                      className="text-xs bg-primary/20 text-primary rounded-md px-2 py-1 truncate"
-                    >
-                      {format(new Date(event.startTime), "p")} — {event.title}
-                    </div>
-                  ))}
+                  {dayEvents.map((event, eIdx) => {
+                    const localStart = toZonedTime(event.startTime, timeZone);
+                    return (
+                      <div
+                        key={eIdx}
+                        className="text-xs bg-primary/20 text-primary rounded-md px-2 py-1 truncate"
+                      >
+                        {format(localStart, "p")} — {event.title}
+                      </div>
+                    );
+                  })}
                 </div>
-                
               </div>
-              
             );
           })}
         </div>
       )}
-      <EventModal
-      open={isEventModalOpen}
-      onOpenChange={setIsEventModalOpen}
-      selectedDate={selectedDate}
-      events={selectedEvents}
-      onUpdate={(updatedEvent: any) => {
-        // ✅ Update state instantly after edit
-        setEvents((prev) =>
-          prev.map((e) => (e._id === updatedEvent._id ? updatedEvent : e))
-        );
-        fetchEvents(); // optional re-fetch from backend
-      }}
-      onDelete={(id: string) => {
-        // ✅ Remove deleted event from state instantly
-        setEvents((prev) => prev.filter((e) => e._id !== id));
-      }}
-    />
 
+      <EventModal
+        open={isEventModalOpen}
+        onOpenChange={setIsEventModalOpen}
+        selectedDate={selectedDate}
+        events={selectedEvents}
+        onUpdate={(updatedEvent: any) => {
+          setEvents((prev) =>
+            prev.map((e) => (e._id === updatedEvent._id ? updatedEvent : e))
+          );
+          fetchEvents();
+        }}
+        onDelete={(id: string) => {
+          setEvents((prev) => prev.filter((e) => e._id !== id));
+        }}
+      />
     </div>
-    
   );
-  
-  
 }

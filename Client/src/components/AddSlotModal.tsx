@@ -1,15 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import axios from "axios";
 import { toast } from "react-toastify";
 
 const API_BASE_URL = "https://slotswapper-project-4hp6.onrender.com/api/events";
@@ -20,65 +15,54 @@ export function AddSlotModal({ open, onOpenChange, onSlotAdded }: any) {
   const [endTime, setEndTime] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleAddSlot = async () => {
-    try {
-      if (!title || !startTime || !endTime) {
-        return toast.error("All fields are required");
-      }
+  const handleAddEvent = async () => {
+    if (!title || !startTime || !endTime) return toast.info("Please fill all fields");
 
+    try {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const response = await fetch(API_BASE_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      // ✅ Convert local datetime to UTC before sending
+      const localStart = new Date(startTime);
+      const localEnd = new Date(endTime);
+      const utcStart = new Date(localStart.getTime() - localStart.getTimezoneOffset() * 60000).toISOString();
+      const utcEnd = new Date(localEnd.getTime() - localEnd.getTimezoneOffset() * 60000).toISOString();
+
+      const res = await axios.post(
+        `${API_BASE_URL}`,
+        {
           title,
-          startTime,
-          endTime,
+          startTime: utcStart,
+          endTime: utcEnd,
           status: "BUSY",
-        }),
-      });
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-      const data = await response.json();
-      setLoading(false);
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to create slot");
-      }
-
-      // ✅ Notify success
-      toast.success("New slot added successfully!");
-
-      // ✅ Pass the newly created event back to parent (MyCalendar)
-      if (onSlotAdded) onSlotAdded(data.event);
-
-      // ✅ Reset fields
+      onSlotAdded(res.data.event);
+      toast.success("Event added successfully!");
       setTitle("");
       setStartTime("");
       setEndTime("");
-
-      // ✅ Close modal
       onOpenChange(false);
     } catch (error: any) {
+      console.error("Error creating event:", error);
+      toast.error(error.response?.data?.message || "Failed to add event");
+    } finally {
       setLoading(false);
-      toast.error(error.message || "Something went wrong");
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-background border border-white/10 rounded-2xl">
+      <DialogContent className="bg-background border border-white/10 text-white rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold text-white">
-            Add New Slot
-          </DialogTitle>
+          <DialogTitle>Add New Event</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 mt-4">
+        <div className="space-y-3 mt-3">
           <Input
             placeholder="Event Title"
             value={title}
@@ -96,13 +80,13 @@ export function AddSlotModal({ open, onOpenChange, onSlotAdded }: any) {
           />
         </div>
 
-        <DialogFooter className="mt-6">
+        <DialogFooter className="mt-4">
           <Button
-            onClick={handleAddSlot}
             disabled={loading}
-            className="gradient-primary text-white px-6 py-2 rounded-lg"
+            onClick={handleAddEvent}
+            className="gradient-primary text-white"
           >
-            {loading ? "Saving..." : "Save Slot"}
+            {loading ? "Saving..." : "Add Event"}
           </Button>
         </DialogFooter>
       </DialogContent>
