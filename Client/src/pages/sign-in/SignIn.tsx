@@ -3,7 +3,7 @@ import Navigation from "@/components/Navigation";
 import AuthForm from "@/pages/auth/AuthForm";
 import { toast } from "react-toastify";
 
-const API_BASE_URL = "https://slotswapper-project-4hp6.onrender.com/api/events";
+const API_BASE_URL = "https://slotswapper-project-4hp6.onrender.com/api/auth";
 
 function SignIn() {
   const navigate = useNavigate();
